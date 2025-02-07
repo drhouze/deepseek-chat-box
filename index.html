@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek AI Chatbot</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .chatbox { width: 100%; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 10px; border-radius: 8px; background: #f9f9f9; }
+        .messages { height: 300px; overflow-y: auto; padding: 10px; border-bottom: 1px solid #ddd; }
+        .input-area { display: flex; margin-top: 10px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px; border: none; background: blue; color: white; cursor: pointer; border-radius: 4px; margin-left: 5px; }
+        .user-message { text-align: right; margin-bottom: 5px; }
+        .ai-message { text-align: left; margin-bottom: 5px; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="chatbox">
+        <div class="messages" id="messages"></div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = "sk-3acdd3a7a3cf49e29c0fd89bcbb763c9";  // Replace with your actual DeepSeek API key
+        const API_URL = "https://api.deepseek.com/v1/chat/completions";  // Check DeepSeek docs for updates
+
+        function sendMessage() {
+            let userInput = document.getElementById("userInput").value;
+            if (!userInput.trim()) return;
+
+            let messagesDiv = document.getElementById("messages");
+            messagesDiv.innerHTML += `<div class="user-message"><strong>You:</strong> ${userInput}</div>`;
+            document.getElementById("userInput").value = "";
+
+            fetch(API_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: "deepseek-chat",
+                    messages: [
+                        { role: "system", content: "You are a helpful assistant." },
+                        { role: "user", content: userInput }
+                    ]
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.choices && data.choices.length > 0) {
+                    let reply = data.choices[0].message.content;
+                    messagesDiv.innerHTML += `<div class="ai-message"><strong>AI:</strong> ${reply}</div>`;
+                } else {
+                    messagesDiv.innerHTML += `<div class="error">Error: No response from AI</div>`;
+                }
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            })
+            .catch(error => {
+                console.error("API Error:", error);
+                messagesDiv.innerHTML += `<div class="error">Error: Unable to fetch AI response</div>`;
+            });
+        }
+    </script>
+
+</body>
+</html>
